@@ -1,0 +1,236 @@
+#include <iostream>
+#include <limits>
+#include <list>
+#include <vector>
+#include <cstdlib>
+
+class Graph {
+private:
+    int vertices;
+    std::vector<std::list<std::pair<int, double>>> adjacencyList;
+
+public:
+    Graph(int v);
+    void addEdge(int x, int y, double weight);
+    int getVertices();
+    std::list<std::pair<int, double>> getNeighbors(int x);
+};
+
+Graph::Graph(int v) : vertices(v), adjacencyList(v) {}
+
+void Graph::addEdge(int x, int y, double weight) {
+    adjacencyList[x].push_back(std::make_pair(y, weight));
+    adjacencyList[y].push_back(std::make_pair(x, weight)); // Assuming undirected graph
+}
+
+int Graph::getVertices() {
+    return vertices;
+}
+
+std::list<std::pair<int, double>> Graph::getNeighbors(int x) {
+    return adjacencyList[x];
+}
+
+class PriorityQueue {
+private:
+    std::vector<int> heap;
+    std::vector<int> priorities;
+    std::vector<int> indexMap;
+
+    void heapifyUp(int index);
+    void heapifyDown(int index);
+
+public:
+    PriorityQueue(int size);
+    void changePriority(int element, int priority);
+    int minPriority();
+    bool contains(int queue_element);
+    void insert(int queue_element);
+    int top();
+    int size();
+};
+
+PriorityQueue::PriorityQueue(int size) : heap(size + 1), priorities(size), indexMap(size) {}
+
+void PriorityQueue::heapifyUp(int index) {
+    int current = index;
+    while (current > 1 && priorities[heap[current / 2]] > priorities[heap[current]]) {
+        std::swap(heap[current], heap[current / 2]);
+        indexMap[heap[current]] = current;
+        indexMap[heap[current / 2]] = current / 2;
+        current = current / 2;
+    }
+}
+
+void PriorityQueue::heapifyDown(int index) {
+    int current = index;
+    while (2 * current <= size()) {
+        int child = 2 * current;
+        if (child + 1 <= size() && priorities[heap[child + 1]] < priorities[heap[child]]) {
+            child += 1;
+        }
+        if (priorities[heap[current]] > priorities[heap[child]]) {
+            std::swap(heap[current], heap[child]);
+            indexMap[heap[current]] = current;
+            indexMap[heap[child]] = child;
+            current = child;
+        } else {
+            break;
+        }
+    }
+}
+
+void PriorityQueue::changePriority(int element, int priority) {
+    priorities[element] = priority;
+    heapifyUp(indexMap[element]);
+    heapifyDown(indexMap[element]);
+}
+
+int PriorityQueue::minPriority() {
+    if (size() == 0) {
+        return -1; // or some sentinel value indicating an empty queue
+    }
+    int minElement = heap[1];
+    heap[1] = heap[size()];
+    indexMap[heap[1]] = 1;
+    heap.pop_back();
+    heapifyDown(1);
+    return minElement;
+}
+
+bool PriorityQueue::contains(int queue_element) {
+    return indexMap[queue_element] != 0;
+}
+
+void PriorityQueue::insert(int queue_element) {
+    heap.push_back(queue_element);
+    indexMap[queue_element] = size();
+    heapifyUp(size());
+}
+
+int PriorityQueue::top() {
+    return size() > 0 ? heap[1] : -1; // or some sentinel value indicating an empty queue
+}
+
+int PriorityQueue::size() {
+    return heap.size() - 1;
+}
+
+class ShortestPath {
+private:
+    Graph& graph;
+    PriorityQueue& pq;
+    std::vector<int> parent;
+
+public:
+    ShortestPath(Graph& g, PriorityQueue& q);
+    std::list<int> vertices();
+    std::list<int> path(int u, int w);
+    double path_size(int u, int w);
+    void dijkstra(int source);
+};
+
+ShortestPath::ShortestPath(Graph& g, PriorityQueue& q) : graph(g), pq(q), parent(g.getVertices(), -1) {}
+
+std::list<int> ShortestPath::vertices() {
+    std::list<int> vertexList;
+    for (int i = 0; i < graph.getVertices(); ++i) {
+        vertexList.push_back(i);
+    }
+    return vertexList;
+}
+
+std::list<int> ShortestPath::path(int u, int w) {
+    std::list<int> shortestPath;
+    int current = w;
+    while (current != -1) {
+        shortestPath.push_front(current);
+        current = parent[current];
+    }
+    return shortestPath;
+}
+
+double ShortestPath::path_size(int u, int w) {
+    std::list<int> pathList = path(u, w);
+    if (pathList.size() < 2) {
+        return 0.0; // No path or only a single vertex
+    }
+
+    double totalWeight = 0.0;
+    auto it = pathList.begin();
+    int current = *it;
+    ++it;
+
+    while (it != pathList.end()) {
+        for (const auto& neighbor : graph.getNeighbors(current)) {
+            if (neighbor.first == *it) {
+                totalWeight += neighbor.second;
+                break;
+            }
+        }
+        current = *it;
+        ++it;
+    }
+
+    return totalWeight;
+}
+
+void ShortestPath::dijkstra(int source) {
+    std::vector<double> distance(graph.getVertices(), std::numeric_limits<double>::infinity());
+    distance[source] = 0.0;
+
+    pq.insert(source);
+
+    while (pq.size() > 0) {
+        int current = pq.minPriority();
+        for (const auto& neighbor : graph.getNeighbors(current)) {
+            double newDistance = distance[current] + neighbor.second;
+            if (newDistance < distance[neighbor.first]) {
+                distance[neighbor.first] = newDistance;
+                parent[neighbor.first] = current;
+                if (pq.contains(neighbor.first)) {
+                    pq.changePriority(neighbor.first, distance[neighbor.first]);
+                } else {
+                    pq.insert(neighbor.first);
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    // Example usage
+    int numVertices = 50;
+    Graph graph(numVertices);
+
+    // Generate random graph with edge density 0.2 and distance range 1.0 to 10.0
+    srand(time(nullptr));
+    double density = 0.2;
+    double distanceRangeStart = 1.0;
+    double distanceRangeEnd = 10.0;
+
+    for (int i = 0; i < numVertices; ++i) {
+        for (int j = i + 1; j < numVertices; ++j) {
+            if ((rand() % 100) / 100.0 < density) {
+                double distance = distanceRangeStart + ((double)rand() / RAND_MAX) * (distanceRangeEnd - distanceRangeStart);
+                graph.addEdge(i, j, distance);
+            }
+        }
+    }
+
+    PriorityQueue pq(numVertices);
+    ShortestPath shortestPath(graph, pq);
+
+    int source = 0; // Set the source vertex
+    shortestPath.dijkstra(source);
+
+    // Output average shortest path lengths
+    for (int destination = 1; destination < numVertices; ++destination) {
+        if (source != destination) {
+            double averagePathLength = shortestPath.path_size(source, destination) / (numVertices - 1);
+            std::cout << "Average Shortest Path Length from " << source << " to " << destination << ": " << averagePathLength << std::endl;
+        }
+    }
+    system("pause");
+    return 0;
+}
