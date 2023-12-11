@@ -1,37 +1,30 @@
 # Graph Shortest Path Calculator
 
-This repository contains a C++ application that calculates the shortest paths in a graph using Dijkstra's algorithm. It is capable of representing weighted graphs and determining the shortest path from a source node to all other nodes.
+## Introduction
 
-## File Structure
+This C++ project implements Dijkstra's algorithm, which is a classic algorithm in computer science for finding the shortest paths between nodes in a graph. The graph is assumed to have weighted edges with non-negative weights.
 
-- `Graph.h`: Header file that declares the `Graph` class.
-- `Main.cpp`: Main application file that includes Dijkstra's algorithm implementation and demonstration.
+## Implementation Details
 
-## Building the Project
+- `Graph`: A class that represents a graph structure using an adjacency list. It allows for efficient access to the graph's vertices and edges and provides methods for adding edges and retrieving neighboring vertices.
 
-To build this project, you need a C++ compiler that supports C++11 or later. The following instructions are for `g++`, which is commonly used on Unix-like systems.
+- `PriorityQueue`: A custom priority queue class that aids Dijkstra's algorithm. It is implemented using a binary heap to efficiently manage and retrieve the next vertex with the shortest tentative distance during the algorithm's execution.
 
-1. Clone the repository to your local machine.
-2. Navigate to the directory containing the cloned files.
-3. Compile the project using the following command:
+- `ShortestPath`: This class uses the `Graph` and `PriorityQueue` classes to compute the shortest paths from a single source vertex to all other vertices in the graph. It encapsulates the logic for Dijkstra's algorithm.
 
-```bash
-g++ -std=c++11 Main.cpp -o ShortestPathCalculator
-```
+## Core Functionality
 
-## Running the Application
+- The code calculates the shortest path from a source node to every other node in the graph.
+- It demonstrates the use of object-oriented principles in C++ to encapsulate the components of Dijkstra's algorithm, such as graph representation and priority queue management.
+- It includes a main function that sets up a sample graph with vertices and weighted edges, and then it executes the shortest path calculation.
 
-After compiling the code, you can run the application using the following command:
+## Project Structure
 
-```bash
-./ShortestPathCalculator
-```
+The project is divided into two main files:
+- **Graph.h**: Contains the declaration of the `Graph` class.
+- **Main.cpp**: Includes the `main` function where the `Graph` and `ShortestPath` classes are utilized to demonstrate the algorithm.
 
-This will execute the `Main.cpp` program, which generates a graph with a predetermined number of vertices and edges, runs Dijkstra's algorithm from a specified source vertex, and prints the average shortest path length to each vertex.
+## Objective
 
-## Features
+The primary goal of this project is to provide a clear and concise implementation of Dijkstra's algorithm, showcasing how it can be applied to compute shortest paths in weighted graphs. This serves as an educational resource for understanding and analyzing the efficiency of Dijkstra's algorithm in pathfinding problems in graphs.
 
-- Efficient graph representation as an adjacency list.
-- Priority queue implementation for optimized performance.
-- Dijkstra's algorithm to compute shortest paths.
-- Console output of the average shortest path length from the source node to every other node.
